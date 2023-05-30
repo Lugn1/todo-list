@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
+          prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea"
+          xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="com.example.todo.Controller">
+    <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints maxHeight="82.0" minHeight="10.0" prefHeight="69.0" vgrow="SOMETIMES"/>
+        <RowConstraints maxHeight="225.0" minHeight="10.0" prefHeight="166.0" vgrow="SOMETIMES"/>
+        <RowConstraints maxHeight="165.0" minHeight="10.0" prefHeight="165.0" vgrow="SOMETIMES"/>
+    </rowConstraints>
+    <ListView fx:id="rightListView" blendMode="DARKEN" onMouseClicked="#rightListClicked" prefHeight="228.0"
+              prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.rowSpan="2"/>
+    <ListView fx:id="leftListView" blendMode="DARKEN" onMouseClicked="#leftListClicked" prefHeight="200.0"
+              prefWidth="200.0" GridPane.rowIndex="1" GridPane.rowSpan="2"/>
+    <Label text="TODO" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+        <font>
+          <Font name="System Bold" size="12.0"/>
+        </font>
+        <GridPane.margin>
+          <Insets top="50.0"/>
+        </GridPane.margin>
+    </Label>
+    <Label text="COMPLETED" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+        <font>
+          <Font name="System Bold" size="12.0"/>
+        </font>
+        <GridPane.margin>
+          <Insets top="50.0"/>
+        </GridPane.margin>
+    </Label>
+    <Button fx:id="addTaskButton" mnemonicParsing="false" onMouseClicked="#addNewTask" prefHeight="38.0"
+            prefWidth="36.0" text="+">
+        <font>
+          <Font name="Fira Code Medium" size="20.0"/>
+        </font>
+    </Button>
+    <Button fx:id="clearCompletedButton" mnemonicParsing="false" onMouseClicked="#clearCompleted" text="Delete All"
+            GridPane.columnIndex="1">
+        <GridPane.margin>
+          <Insets left="220.0"/>
+        </GridPane.margin>
+    </Button>
+</GridPane>

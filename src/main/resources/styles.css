@@ -1,0 +1,11 @@
+.high-priority {
+    -fx-background-color: #e52e2e;
+}
+
+.medium-priority {
+    -fx-background-color: #f6c04d;
+}
+
+.low-priority {
+    -fx-background-color: #7eee7e;
+}
