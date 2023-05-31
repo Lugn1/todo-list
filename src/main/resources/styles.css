@@ -1,11 +1,14 @@
-.high-priority {
-    -fx-background-color: #e52e2e;
+.list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: lightgray;
+    -fx-border-width: 1 1 1 0px;
 }
 
-.medium-priority {
-    -fx-background-color: #f6c04d;
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: lightgray;
+    -fx-border-width: 1 1 1 0px;
 }
 
-.low-priority {
-    -fx-background-color: #7eee7e;
-}
+
+

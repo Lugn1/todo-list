@@ -5,51 +5,65 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<?import javafx.collections.FXCollections?>
-<?import java.lang.String?>
-<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
-          prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea"
-          xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="com.example.todo.Controller">
+<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.todo.Controller">
     <columnConstraints>
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="195.0" minWidth="10.0" prefWidth="81.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="250.0" minWidth="10.0" prefWidth="230.0" />
+        <ColumnConstraints hgrow="SOMETIMES" maxWidth="250.0" minWidth="10.0" prefWidth="230.0" />
     </columnConstraints>
     <rowConstraints>
-        <RowConstraints maxHeight="82.0" minHeight="10.0" prefHeight="69.0" vgrow="SOMETIMES"/>
-        <RowConstraints maxHeight="225.0" minHeight="10.0" prefHeight="166.0" vgrow="SOMETIMES"/>
-        <RowConstraints maxHeight="165.0" minHeight="10.0" prefHeight="165.0" vgrow="SOMETIMES"/>
+        <RowConstraints maxHeight="82.0" minHeight="10.0" prefHeight="69.0" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="225.0" minHeight="10.0" prefHeight="166.0" vgrow="SOMETIMES" />
+        <RowConstraints maxHeight="165.0" minHeight="10.0" prefHeight="165.0" vgrow="SOMETIMES" />
     </rowConstraints>
-    <ListView fx:id="rightListView" blendMode="DARKEN" onMouseClicked="#rightListClicked" prefHeight="228.0"
-              prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.rowSpan="2"/>
-    <ListView fx:id="leftListView" blendMode="DARKEN" onMouseClicked="#leftListClicked" prefHeight="200.0"
-              prefWidth="200.0" GridPane.rowIndex="1" GridPane.rowSpan="2"/>
-    <Label text="TODO" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+    <ListView fx:id="rightListView" blendMode="DARKEN" onMouseClicked="#rightListClicked" onMousePressed="#editCompletedItems" prefHeight="326.0" prefWidth="244.0" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.rowSpan="2" />
+    <ListView fx:id="leftListView" blendMode="DARKEN" onMouseClicked="#leftListClicked" onMousePressed="#editTodoItems" prefHeight="326.0" prefWidth="243.0" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.rowSpan="2" />
+    <Label text="TODO" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
         <font>
-          <Font name="System Bold" size="12.0"/>
+          <Font name="System Bold" size="12.0" />
         </font>
         <GridPane.margin>
-          <Insets top="50.0"/>
+          <Insets top="50.0" />
         </GridPane.margin>
     </Label>
-    <Label text="COMPLETED" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+    <Label text="COMPLETED" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
         <font>
-          <Font name="System Bold" size="12.0"/>
+          <Font name="System Bold" size="12.0" />
         </font>
         <GridPane.margin>
-          <Insets top="50.0"/>
+          <Insets top="50.0" />
         </GridPane.margin>
     </Label>
-    <Button fx:id="addTaskButton" mnemonicParsing="false" onMouseClicked="#addNewTask" prefHeight="38.0"
-            prefWidth="36.0" text="+">
+    <Button fx:id="addTaskButton" mnemonicParsing="false" onMouseClicked="#addNewTask" prefHeight="14.0" prefWidth="22.0" text="+" GridPane.columnIndex="1" GridPane.rowIndex="1">
         <font>
-          <Font name="Fira Code Medium" size="20.0"/>
+          <Font name="Fira Code Medium" size="20.0" />
         </font>
+      <GridPane.margin>
+         <Insets />
+      </GridPane.margin>
     </Button>
-    <Button fx:id="clearCompletedButton" mnemonicParsing="false" onMouseClicked="#clearCompleted" text="Delete All"
-            GridPane.columnIndex="1">
+    <Button fx:id="clearCompletedButton" mnemonicParsing="false" onMouseClicked="#clearCompleted" text="Delete All" GridPane.columnIndex="2">
         <GridPane.margin>
-          <Insets left="220.0"/>
+          <Insets left="220.0" />
         </GridPane.margin>
     </Button>
+
+    <ScrollPane GridPane.rowIndex="1" GridPane.rowSpan="2" fitToWidth="true" fitToHeight="true" blendMode="DARKEN">
+    <VBox fx:id="profileButtonContainer" prefHeight="215.0" prefWidth="101.0" GridPane.rowIndex="1" GridPane.rowSpan="2">
+
+    </VBox>
+   </ScrollPane>
+
+
+
+    <Button mnemonicParsing="false" onMousePressed="#createNewProfile" prefHeight="25.0" prefWidth="133.0" text="Add profile..">
+      <font>
+         <Font name="Calibri Light" size="12.0" />
+      </font>
+   </Button>
+   <Label prefHeight="31.0" prefWidth="57.0" text="Profiles">
+      <GridPane.margin>
+         <Insets left="25.0" top="50.0" />
+      </GridPane.margin>
+   </Label>
 </GridPane>
