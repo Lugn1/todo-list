@@ -2,6 +2,7 @@ package com.example.todo;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -29,17 +30,48 @@ public class Controller {
     @FXML
     protected Button addTaskButton;
 
+    @FXML
+    protected Button clearCompletedButton;
+
     private String profileName = "Default";
     private final Map<String, List<Task>> profileTasksMap = new HashMap<>();
 
     @FXML
     private void initialize() {
 
+        // Add default profile
+        Button defaultProfileButton = new Button("Default");
+        defaultProfileButton.setPrefWidth(Control.USE_PREF_SIZE);
+        defaultProfileButton.setMaxWidth(Double.MAX_VALUE);
+        defaultProfileButton.setOnMouseClicked(this::profileButtonClicked);
+        profileButtonContainer.getChildren().add(defaultProfileButton);
+
+
+        // Add button
+        Image image = new Image("/addicon.png");
+        ImageView imageView = new ImageView(image);
+        imageView.setFitHeight(30);
+        imageView.setFitWidth(30);
+        imageView.setSmooth(true);
+        addTaskButton.setGraphic(imageView);
+        addTaskButton.setStyle("-fx-border-color: transparent; -fx-background-color: transparent;");
+
+        // Delete button
+        Image image2 = new Image("/deleteicon.png");
+        ImageView imageView2 = new ImageView(image2);
+        imageView2.setFitHeight(30);
+        imageView2.setFitWidth(30);
+        imageView2.setSmooth(true);
+        clearCompletedButton.setGraphic(imageView2);
+        clearCompletedButton.setStyle("-fx-border-color: transparent; -fx-background-color: transparent;");
+
         profileButtonContainer.getChildren().forEach(node -> {
             if (node instanceof Button profileButton) {
                 profileButton.setOnMouseClicked(this::profileButtonClicked);
             }
         });
+
+        // Update active tasks listview
         leftListView.setCellFactory(param -> new ListCell<Task>() {
             @Override
             protected void updateItem(Task item, boolean empty) {
@@ -59,8 +91,7 @@ public class Controller {
             }
         });
 
-
-
+        // Update completed tasks listview
         rightListView.setCellFactory(param -> new ListCell<Task>() {
             @Override
             protected void updateItem(Task item, boolean empty) {
@@ -84,6 +115,12 @@ public class Controller {
     @FXML
     private void profileButtonClicked(MouseEvent mouseEvent) {
         Button profileButton = (Button) mouseEvent.getSource();
+        if (profileButton.getText().equals("Default")) {
+            profileName = "Default";
+            updateListViewByProfile("Default");
+            return;
+        }
+
         String profileName = profileButton.getText();
         System.out.println("Profile " + profileName + " clicked");
         this.profileName = profileName;
@@ -91,6 +128,12 @@ public class Controller {
     }
 
     private void updateListViewByProfile(String profileName) {
+        if (profileName.equals("Default")) {
+            List<Task> tasks = profileTasksMap.getOrDefault("Default", new ArrayList<>());
+            leftListView.getItems().setAll(tasks);
+            return;
+        }
+
         List<Task> tasks = profileTasksMap.getOrDefault(profileName, new ArrayList<>());
 
         leftListView.getItems().clear();
@@ -206,16 +249,6 @@ public class Controller {
             }
         });
     }
-
-    private String getSelectedProfileName() {
-        Object selectedProfile = leftListView.getSelectionModel().getSelectedItem();
-        System.out.println(selectedProfile + " <---- SELECTED");
-        if (selectedProfile != null) {
-            return selectedProfile.toString();
-        }
-        return null;
-    }
-
 
     public void editTodoItems(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.SECONDARY) {
@@ -410,7 +443,6 @@ public class Controller {
     }
 
 
-
     private String getPriorityFromText(String text) {
         String[] parts = text.split("\\(");
         if (parts.length > 1) {
@@ -422,8 +454,10 @@ public class Controller {
 
 }
 
-// TODO  Add a default profile button.
-// TODO  Make Task stay on rightListView (completed) when swapping back and forth between profiles.
-// TODO  Add a way to edit a profile button name.
-// TODO  Add logic to delete a profile button with all it's contents. (Maybe a confirmation dialog)
-// TODO Update the TODO label to match profile name when swapping profiles.
+// TODO 2: Make Task stay on rightListView (completed) when swapping back and forth between profiles.
+// TODO 3: Add a way to edit a profile button name.
+// TODO 4: Add logic to delete a profile button with all it's contents. (Maybe a confirmation dialog)
+// TODO 5: Update the TODO label to match profile name when swapping profiles.
+// TODO 6: Make the listviews responsive to window size changes.
+// TODO 7: Add a way to make the user to resize the listviews.
+// TODO 8: Maybe add number of todo's on the right side of the profile buttons.
