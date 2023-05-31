@@ -1,6 +1,5 @@
 package com.example.todo;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
@@ -18,29 +17,32 @@ import java.util.*;
 
 public class Controller {
 
+
     @FXML
     public VBox profileButtonContainer;
     @FXML
-    protected ListView<Label> leftListView;
+    protected ListView<Task> leftListView;
 
     @FXML
-    protected ListView<Label> rightListView;
+    protected ListView<Task> rightListView;
 
     @FXML
     protected Button addTaskButton;
+
+    private String profileName = "Default";
+    private final Map<String, List<Task>> profileTasksMap = new HashMap<>();
 
     @FXML
     private void initialize() {
 
         profileButtonContainer.getChildren().forEach(node -> {
-            if (node instanceof Button) {
-                Button profileButton = (Button) node;
+            if (node instanceof Button profileButton) {
                 profileButton.setOnMouseClicked(this::profileButtonClicked);
             }
         });
-        leftListView.setCellFactory(param -> new ListCell<>() {
+        leftListView.setCellFactory(param -> new ListCell<Task>() {
             @Override
-            protected void updateItem(Label item, boolean empty) {
+            protected void updateItem(Task item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (empty || item == null) {
@@ -50,16 +52,18 @@ public class Controller {
                 } else {
                     setText(item.getText());
                     setGraphic(null);
-                    String priority = getPriorityFromText(item.getText());
+                    String priority = item.getPriority();
                     assert priority != null;
                     setBackground(new Background(new BackgroundFill(getPriorityColor(priority), null, null)));
                 }
             }
         });
 
-        rightListView.setCellFactory(param -> new ListCell<>() {
+
+
+        rightListView.setCellFactory(param -> new ListCell<Task>() {
             @Override
-            protected void updateItem(Label item, boolean empty) {
+            protected void updateItem(Task item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (empty) {
@@ -76,18 +80,34 @@ public class Controller {
         });
     }
 
+
     @FXML
     private void profileButtonClicked(MouseEvent mouseEvent) {
         Button profileButton = (Button) mouseEvent.getSource();
         String profileName = profileButton.getText();
         System.out.println("Profile " + profileName + " clicked");
+        this.profileName = profileName;
+        updateListViewByProfile(profileName);
+    }
+
+    private void updateListViewByProfile(String profileName) {
+        List<Task> tasks = profileTasksMap.getOrDefault(profileName, new ArrayList<>());
+
+        leftListView.getItems().clear();
+        rightListView.getItems().clear();
+
+        for (Task task : tasks) {
+            leftListView.getItems().add(task);
+        }
+
+
     }
 
     @FXML
     protected void leftListClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
             if (!leftListView.getSelectionModel().isEmpty()) {
-                Label selectedItem = leftListView.getSelectionModel().getSelectedItem();
+                Task selectedItem = leftListView.getSelectionModel().getSelectedItem();
                 if (selectedItem != null) {
                     rightListView.getItems().add(selectedItem);
                     leftListView.getItems().remove(selectedItem);
@@ -102,7 +122,7 @@ public class Controller {
     public void rightListClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
             if (!rightListView.getSelectionModel().isEmpty()) {
-                Label selectedItem = rightListView.getSelectionModel().getSelectedItem();
+                Task selectedItem = rightListView.getSelectionModel().getSelectedItem();
                 if (selectedItem != null) {
                     rightListView.getItems().remove(selectedItem);
                     leftListView.getItems().add(selectedItem);
@@ -158,61 +178,48 @@ public class Controller {
         dialog.getDialogPane().setContent(dialogContent);
         Optional<String> result = dialog.showAndWait();
 
-        if (result.isPresent()) {
+        result.ifPresent(resultTask -> {
             if (isRadioButtonSelected(priorityGroup)) {
+                String profileName = this.profileName;
+
                 String priority = ((RadioButton) priorityGroup.getSelectedToggle()).getText();
-                Label label = new Label(result.get());
-                label.setStyle("-fx-background-color: " + getPriorityColor(priority));
-                label.setText(result.get() + " (" + priority + ")");
-                leftListView.getItems().add(label);
+                Color priorityColor = Task.getPriorityColor();
+
+                Task newTask = new Task();
+                newTask.setPriority(priority);
+                newTask.setText(resultTask);
+                leftListView.getItems().add(newTask);
+
+                List<Task> profileTasks = profileTasksMap.getOrDefault(profileName, new ArrayList<>());
+                profileTasks.add(new Task(resultTask, priority, priorityColor));
+                profileTasksMap.put(profileName, profileTasks);
 
                 leftListView.getItems().sort((o1, o2) -> {
-                    String priority1 = getPriorityFromText(o1.getText());
-                    String priority2 = getPriorityFromText(o2.getText());
-                    return comparePriority(priority1, priority2);
+                    Task task1 = profileTasksMap.getOrDefault
+                            (profileName, new ArrayList<>()).get(leftListView.getItems().indexOf(o1));
+                    Task task2 = profileTasksMap.getOrDefault
+                            (profileName, new ArrayList<>()).get(leftListView.getItems().indexOf(o2));
+                    return comparePriority(task1.getPriority(), task2.getPriority());
                 });
             } else {
                 showAlert();
             }
-        }
+        });
     }
 
-    private void showAlert() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText("Please select priority");
-
-        alert.initModality(Modality.APPLICATION_MODAL);
-
-        alert.showAndWait();
-    }
-
-    private boolean isRadioButtonSelected(ToggleGroup toggleGroup) {
-        return toggleGroup.getSelectedToggle() != null;
-    }
-
-    private Color getPriorityColor(String priority) {
-        return switch (priority) {
-            case "High" -> Color.web("#fa7575");
-            case "Medium" -> Color.web("#fae875");
-            case "Low" -> Color.web("#96fa75");
-            default -> Color.TRANSPARENT;
-        };
-    }
-
-    private String getPriorityFromText(String text) {
-        String[] parts = text.split("\\(");
-        if (parts.length > 1) {
-            String priorityPart = parts[1].trim();
-            return priorityPart.substring(0, priorityPart.length() - 1);
+    private String getSelectedProfileName() {
+        Object selectedProfile = leftListView.getSelectionModel().getSelectedItem();
+        System.out.println(selectedProfile + " <---- SELECTED");
+        if (selectedProfile != null) {
+            return selectedProfile.toString();
         }
         return null;
     }
 
+
     public void editTodoItems(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.SECONDARY) {
-            Label selectedItem = leftListView.getSelectionModel().getSelectedItem();
+            Task selectedItem = leftListView.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 ContextMenu contextMenu = new ContextMenu();
 
@@ -255,7 +262,7 @@ public class Controller {
                         String newPriority = ((RadioButton) priorityGroup.getSelectedToggle()).getText();
                         String updatedTask = newText + " (" + newPriority + ")";
                         selectedItem.setText(updatedTask);
-                        selectedItem.setStyle("-fx-background-color: " + getPriorityColor(newPriority));
+                        selectedItem.setPriority(newPriority);
                         leftListView.refresh();
 
                     }
@@ -279,7 +286,7 @@ public class Controller {
 
     public void editCompletedItems(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.SECONDARY) {
-            Label selectedItem = rightListView.getSelectionModel().getSelectedItem();
+            Task selectedItem = rightListView.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 ContextMenu contextMenu = new ContextMenu();
 
@@ -311,9 +318,17 @@ public class Controller {
             } else if (p1.equals("High")) {
                 return -1;
             } else if (p1.equals("Medium")) {
-                return p2.equals("High") ? 1 : -1;
+                if (p2 == null || p2.equals("High")) {
+                    return 1;
+                } else {
+                    return -1;
+                }
             } else if (p1.equals("Low")) {
-                return p2.equals("High") || p2.equals("Medium") ? 1 : -1;
+                if (p2 == null || p2.equals("High") || p2.equals("Medium")) {
+                    return 1;
+                } else {
+                    return -1;
+                }
             } else {
                 return 0;
             }
@@ -336,27 +351,7 @@ public class Controller {
         }
     }
 
-    private ToggleGroup createPriorityToggleGroup(RadioButton[] priorityButtons) {
-        ToggleGroup priorityGroup = new ToggleGroup();
-
-        for (RadioButton priorityButton : priorityButtons) {
-            priorityButton.setToggleGroup(priorityGroup);
-        }
-
-        return priorityGroup;
-
-    }
-
-    private RadioButton[] createPriorityButtons() {
-        RadioButton highPriority = new RadioButton("High");
-        RadioButton mediumPriority = new RadioButton("Medium");
-        RadioButton lowPriority = new RadioButton("Low");
-
-        return new RadioButton[]{highPriority, mediumPriority, lowPriority};
-
-    }
-
-    public void createNewProfile(MouseEvent mouseEvent) {
+    public void createNewProfile() {
         TextInputDialog newProfileDialog = new TextInputDialog();
         newProfileDialog.setTitle("Add Profile");
         newProfileDialog.setHeaderText(null);
@@ -380,8 +375,55 @@ public class Controller {
             newProfileButton.setMaxWidth(Double.MAX_VALUE);
             newProfileButton.setOnMouseClicked(this::profileButtonClicked);
             profileButtonContainer.getChildren().add(newProfileButton);
+            profileTasksMap.put(profileName, new ArrayList<>());
         });
 
 
     }
+
+    private void showAlert() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText("Please select priority");
+
+        alert.initModality(Modality.APPLICATION_MODAL);
+
+        alert.showAndWait();
+    }
+
+    private boolean isRadioButtonSelected(ToggleGroup toggleGroup) {
+        return toggleGroup.getSelectedToggle() != null;
+    }
+
+    //todo maybe only use Task method?
+    private Color getPriorityColor(String priority) {
+        if (priority == null) {
+            return Color.TRANSPARENT;
+        }
+        return switch (priority) {
+            case "High" -> Color.web("#fa7575");
+            case "Medium" -> Color.web("#fae875");
+            case "Low" -> Color.web("#96fa75");
+            default -> Color.TRANSPARENT;
+        };
+    }
+
+
+
+    private String getPriorityFromText(String text) {
+        String[] parts = text.split("\\(");
+        if (parts.length > 1) {
+            String priorityPart = parts[1].trim();
+            return priorityPart.substring(0, priorityPart.length() - 1);
+        }
+        return null;
+    }
+
 }
+
+// TODO  Add a default profile button.
+// TODO  Make Task stay on rightListView (completed) when swapping back and forth between profiles.
+// TODO  Add a way to edit a profile button name.
+// TODO  Add logic to delete a profile button with all it's contents. (Maybe a confirmation dialog)
+// TODO Update the TODO label to match profile name when swapping profiles.
