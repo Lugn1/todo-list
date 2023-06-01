@@ -165,9 +165,42 @@ public class Controller {
         updateListViews();
     }
 
-    // todo update this method
     private void deleteProfile(String profileName) {
-        System.out.println("Deleting profile " + profileName);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete profile");
+        alert.setHeaderText(null);
+        alert.setContentText("Are you sure you want to delete profile " + profileName +
+                "? \nThe profile cannot be restored after deletion.");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            rightListView.getItems().clear();
+
+            profileTasksMap.remove(profileName);
+
+            profileButtonContainer.getChildren().removeIf(node -> {
+                if (node instanceof Button profileButton) {
+                    return profileButton.getText().equals(profileName);
+                }
+                return false;
+            });
+
+            if (this.profileName.equals(profileName)) {
+                if (!profileTasksMap.isEmpty()) {
+                    String firstProfileName = profileTasksMap.keySet().iterator().next();
+                    this.profileName = firstProfileName;
+                    profileLabel.setText(firstProfileName);
+                } else {
+                    this.profileName = null;
+                    profileLabel.setText("NO PROFILE SELECTED");
+                }
+            }
+
+            updateListViews();
+
+        } else {
+            alert.close();
+        }
     }
 
 
@@ -350,13 +383,13 @@ public class Controller {
 
                 MenuItem editMenuItem = new MenuItem("Archive");
                 editMenuItem.setOnAction(event -> {
-                    // Handle the edit action here
+                    // TODO Handle the archive action here
                     System.out.println("Edit option selected for item: " + selectedItem.getText());
                 });
 
                 MenuItem deleteMenuItem = new MenuItem("Delete");
                 deleteMenuItem.setOnAction(event -> {
-                    // Handle the delete action here
+                    // TODO Handle the delete action here
                     System.out.println("Delete option selected for item: " + selectedItem.getText());
 
                     rightListView.getItems().remove(selectedItem);
@@ -418,7 +451,6 @@ public class Controller {
         List<Task> tasks = profileTasksMap.remove(oldProfileName);
         profileTasksMap.put(newProfileName, tasks);
 
-        // Update the profile button text
         profileButtonContainer.getChildren().forEach(node -> {
             if (node instanceof Button profileButton) {
                 if (profileButton.getText().equals(oldProfileName)) {
@@ -427,7 +459,6 @@ public class Controller {
             }
         });
 
-        // Update the current profile name and label
         if (profileName.equals(oldProfileName)) {
             profileName = newProfileName;
             profileLabel.setText(newProfileName);
@@ -501,10 +532,20 @@ public class Controller {
 
 }
 
-// TOdo update delete method in complete list
-// todo update delete all method in complete list
-// TODO 16: Add a way to edit a profile button name.
-// TODO 17: Add logic to delete a profile button with all it's contents. (Maybe a confirmation dialog)
-// TODO 19: Make the listviews responsive to window size changes.
-// TODO 20: Add a way to make the user to resize the listviews.
-// TODO 21: Maybe add number of todo's on the right side of the profile buttons.
+
+// Backend
+// TODO Do not allow user to create a new profile with the same name as an existing one.
+// TODO Add a FileWriter class.
+// TODO Add methods to the FileWriter class to handle data.
+// TODO Update Archive(?) method in rightListView.
+// TODO Update delete method in rightListView.
+// TODO Update delete all method in complete list.
+
+// Frontend
+// TODO highlight the button of the active profile.
+// TODO Make the listviews responsive to window size changes.
+// TODO Add a way to make the user to resize the listviews.
+// TODO Add number of tasks on the right side of the profile buttons.
+// TODO Maybe let user change colors of priorities.
+// TODO Generally improve the UI design.
+

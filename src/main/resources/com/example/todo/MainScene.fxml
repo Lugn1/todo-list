@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.todo.Controller">
+<GridPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.todo.Controller">
     <columnConstraints>
         <ColumnConstraints hgrow="SOMETIMES" maxWidth="195.0" minWidth="10.0" prefWidth="81.0" />
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="250.0" minWidth="10.0" prefWidth="230.0" />
@@ -16,8 +16,8 @@
         <RowConstraints maxHeight="225.0" minHeight="10.0" prefHeight="166.0" vgrow="SOMETIMES" />
         <RowConstraints maxHeight="165.0" minHeight="10.0" prefHeight="165.0" vgrow="SOMETIMES" />
     </rowConstraints>
-    <ListView fx:id="rightListView" blendMode="DARKEN" onMouseClicked="#rightListClicked" onMousePressed="#editCompletedItems" prefHeight="326.0" prefWidth="244.0" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.rowSpan="2" />
-    <ListView fx:id="leftListView" blendMode="DARKEN" onMouseClicked="#leftListClicked" onMousePressed="#editTodoItems" prefHeight="326.0" prefWidth="243.0" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.rowSpan="2" />
+    <ListView fx:id="rightListView" blendMode="DARKEN" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#rightListClicked" onMousePressed="#editCompletedItems" prefHeight="326.0" prefWidth="244.0" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.rowSpan="2" />
+    <ListView fx:id="leftListView" blendMode="DARKEN" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" onMouseClicked="#leftListClicked" onMousePressed="#editTodoItems" prefHeight="326.0" prefWidth="243.0" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.rowSpan="2" />
     <Label fx:id="profileLabel" text="TODO" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
         <font>
           <Font name="System Bold" size="12.0" />
@@ -56,7 +56,7 @@
 
 
 
-    <Button mnemonicParsing="false" onMousePressed="#addNewProfile" prefHeight="25.0" prefWidth="133.0" text="ADD PROFILE" GridPane.valignment="TOP">
+    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onMousePressed="#addNewProfile" text="ADD PROFILE" GridPane.valignment="TOP">
       <font>
          <Font name="Calibri Light" size="12.0" />
       </font>

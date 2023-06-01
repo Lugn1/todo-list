@@ -15,6 +15,7 @@ public class Application extends javafx.application.Application {
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/styles.css")).toExternalForm());
         stage.setTitle("TODO!");
         stage.setScene(scene);
+        stage.setResizable(false);
         stage.show();
 
     }
