@@ -48,19 +48,13 @@ public class Controller {
 
     @FXML
     private void initialize() {
-        profileName = "Default";
+        profileName = "NO PROFILE SELECTED";
         profileTasksMap = new HashMap<>();
 
         profileLabel.setText(profileName);
 
         leftListView.setItems(leftTasks);
         rightListView.setItems(rightTasks);
-
-        Button defaultProfileButton = new Button("Default");
-        defaultProfileButton.setPrefWidth(Control.USE_PREF_SIZE);
-        defaultProfileButton.setMaxWidth(Double.MAX_VALUE);
-        defaultProfileButton.setOnMouseClicked(this::profileButtonClicked);
-        profileButtonContainer.getChildren().add(defaultProfileButton);
 
         Image image = new Image("/addicon.png");
         ImageView imageView = new ImageView(image);
@@ -136,9 +130,44 @@ public class Controller {
 
         String profileName = profileButton.getText();
         this.profileName = profileName;
+
+
+        if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+            System.out.println("Right click");
+            ContextMenu contextMenu = new ContextMenu();
+            MenuItem renameMenuItem = new MenuItem("Rename");
+
+            renameMenuItem.setOnAction(event -> {
+                TextInputDialog dialog = new TextInputDialog(profileName);
+                dialog.setTitle("Rename profile");
+                dialog.setHeaderText(null);
+                dialog.setContentText("Enter new profile name:");
+                Window mainWindow = profileButton.getScene().getWindow();
+                dialog.initOwner(mainWindow);
+
+                Optional<String> result = dialog.showAndWait();
+                result.ifPresent(newProfileName -> {
+                    if (!newProfileName.isEmpty()) {
+                        renameProfile(profileName, newProfileName);
+                    }
+                });
+            });
+
+            MenuItem deleteMenuItem = new MenuItem("Delete");
+            deleteMenuItem.setOnAction(event -> deleteProfile(profileName));
+
+            contextMenu.getItems().addAll(renameMenuItem, deleteMenuItem);
+            profileButton.setContextMenu(contextMenu);
+
+        }
+
         profileLabel.setText(profileName);
         updateListViews();
-        System.out.println("Profile: " + profileName);
+    }
+
+    // todo update this method
+    private void deleteProfile(String profileName) {
+        System.out.println("Deleting profile " + profileName);
     }
 
 
@@ -170,102 +199,67 @@ public class Controller {
     }
 
     @FXML
-    protected void leftListClicked(MouseEvent mouseEvent) {
-
-        if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-            if (!leftListView.getSelectionModel().isEmpty()) {
-                Task selectedItem = leftListView.getSelectionModel().getSelectedItem();
-                String activeProfile = profileLabel.getText();
-                List<Task> profileTasks = profileTasksMap.getOrDefault(activeProfile, new ArrayList<>());
-
-                profileTasks.remove(selectedItem);
-                selectedItem.setTaskCompleted(true);
-                profileTasks.add(selectedItem);
-                profileTasksMap.put(activeProfile, profileTasks);
-
-                updateListViews();
-            }
-        }
-    }
-
-    @FXML
-    public void rightListClicked(MouseEvent mouseEvent) {
-        if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-            if (!rightListView.getSelectionModel().isEmpty()) {
-                Task selectedItem = rightListView.getSelectionModel().getSelectedItem();
-                String activeProfile = profileLabel.getText();
-                List<Task> profileTasks = profileTasksMap.getOrDefault(activeProfile, new ArrayList<>());
-
-                profileTasks.remove(selectedItem);
-                selectedItem.setTaskCompleted(false);
-                profileTasks.add(selectedItem);
-                profileTasksMap.put(activeProfile, profileTasks);
-
-                updateListViews();
-            }
-        }
-    }
-
-    @FXML
     private void addNewTask() {
-        TextInputDialog dialog = new TextInputDialog();
+        if (!profileName.equals("NO PROFILE SELECTED")) {
+            TextInputDialog dialog = new TextInputDialog();
 
-        Window mainWindow = addTaskButton.getScene().getWindow();
-        dialog.initOwner(mainWindow);
-        dialog.setTitle("Add task");
-        dialog.setHeaderText(null);
-        dialog.setContentText("Enter task:");
-        dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
+            Window mainWindow = addTaskButton.getScene().getWindow();
+            dialog.initOwner(mainWindow);
+            dialog.setTitle("Add task");
+            dialog.setHeaderText(null);
+            dialog.setContentText("Enter task:");
+            dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
 
-        ToggleGroup priorityGroup = new ToggleGroup();
-        RadioButton highPriority = new RadioButton("High");
-        highPriority.setToggleGroup(priorityGroup);
-        RadioButton mediumPriority = new RadioButton("Medium");
-        mediumPriority.setToggleGroup(priorityGroup);
-        RadioButton lowPriority = new RadioButton("Low");
-        lowPriority.setToggleGroup(priorityGroup);
+            ToggleGroup priorityGroup = new ToggleGroup();
+            RadioButton highPriority = new RadioButton("High");
+            highPriority.setToggleGroup(priorityGroup);
+            RadioButton mediumPriority = new RadioButton("Medium");
+            mediumPriority.setToggleGroup(priorityGroup);
+            RadioButton lowPriority = new RadioButton("Low");
+            lowPriority.setToggleGroup(priorityGroup);
 
-        priorityGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            boolean isInputEmpty = dialog.getEditor().getText().isEmpty();
-            boolean isPrioritySelected = newValue != null;
-            dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(isInputEmpty || !isPrioritySelected);
-        });
+            priorityGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+                boolean isInputEmpty = dialog.getEditor().getText().isEmpty();
+                boolean isPrioritySelected = newValue != null;
+                dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(isInputEmpty || !isPrioritySelected);
+            });
 
-        dialog.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
-            boolean isInputEmpty = dialog.getEditor().getText().isEmpty();
-            boolean isPrioritySelected = priorityGroup.getSelectedToggle() != null;
-            dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(isInputEmpty || !isPrioritySelected);
-        });
-
-
-        VBox dialogContent = new VBox(10);
-        dialogContent.getChildren().addAll(new Label("Task:"), dialog.getEditor(),
-                new Label("Priority:"), highPriority, mediumPriority, lowPriority);
+            dialog.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+                boolean isInputEmpty = dialog.getEditor().getText().isEmpty();
+                boolean isPrioritySelected = priorityGroup.getSelectedToggle() != null;
+                dialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(isInputEmpty || !isPrioritySelected);
+            });
 
 
-        dialog.getDialogPane().setContent(dialogContent);
-        Optional<String> result = dialog.showAndWait();
+            VBox dialogContent = new VBox(10);
+            dialogContent.getChildren().addAll(new Label("Task:"), dialog.getEditor(),
+                    new Label("Priority:"), highPriority, mediumPriority, lowPriority);
 
-        result.ifPresent(resultTask -> {
-            if (isRadioButtonSelected(priorityGroup)) {
-                String profileName = this.profileName;
 
-                String priority = ((RadioButton) priorityGroup.getSelectedToggle()).getText();
+            dialog.getDialogPane().setContent(dialogContent);
+            Optional<String> result = dialog.showAndWait();
 
-                int priorityValue = getPriority(priority);
-                Color priorityColor = Task.getPriorityColor();
+            result.ifPresent(resultTask -> {
+                if (isRadioButtonSelected(priorityGroup)) {
+                    String profileName = this.profileName;
 
-                List<Task> profileTasks = profileTasksMap.getOrDefault(profileName, new ArrayList<>());
-                profileTasks.add(new Task(resultTask, priorityValue, priorityColor, false));
-                System.out.println("PROFILE LABEL: " + profileLabel.getText().toLowerCase());
-                profileTasksMap.put(profileName, profileTasks);
+                    String priority = ((RadioButton) priorityGroup.getSelectedToggle()).getText();
 
-                updateListViews();
+                    int priorityValue = getPriority(priority);
+                    Color priorityColor = Task.getPriorityColor();
 
-            } else {
-                showAlert();
-            }
-        });
+                    List<Task> profileTasks = profileTasksMap.getOrDefault(profileName, new ArrayList<>());
+                    profileTasks.add(new Task(resultTask, priorityValue, priorityColor, false));
+                    System.out.println("PROFILE LABEL: " + profileLabel.getText().toLowerCase());
+                    profileTasksMap.put(profileName, profileTasks);
+
+                    updateListViews();
+
+                } else {
+                    showAlert();
+                }
+            });
+        }
     }
 
     private int getPriority(String priority) {
@@ -415,7 +409,69 @@ public class Controller {
             newProfileButton.setOnMouseClicked(this::profileButtonClicked);
             profileButtonContainer.getChildren().add(newProfileButton);
             profileTasksMap.put(profileName, new ArrayList<>());
+
+
         });
+    }
+
+    private void renameProfile(String oldProfileName, String newProfileName) {
+        List<Task> tasks = profileTasksMap.remove(oldProfileName);
+        profileTasksMap.put(newProfileName, tasks);
+
+        // Update the profile button text
+        profileButtonContainer.getChildren().forEach(node -> {
+            if (node instanceof Button profileButton) {
+                if (profileButton.getText().equals(oldProfileName)) {
+                    profileButton.setText(newProfileName);
+                }
+            }
+        });
+
+        // Update the current profile name and label
+        if (profileName.equals(oldProfileName)) {
+            profileName = newProfileName;
+            profileLabel.setText(newProfileName);
+        }
+
+        updateListViews();
+    }
+
+
+    @FXML
+    protected void leftListClicked(MouseEvent mouseEvent) {
+
+        if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+            if (!leftListView.getSelectionModel().isEmpty()) {
+                Task selectedItem = leftListView.getSelectionModel().getSelectedItem();
+                String activeProfile = profileLabel.getText();
+                List<Task> profileTasks = profileTasksMap.getOrDefault(activeProfile, new ArrayList<>());
+
+                profileTasks.remove(selectedItem);
+                selectedItem.setTaskCompleted(true);
+                profileTasks.add(selectedItem);
+                profileTasksMap.put(activeProfile, profileTasks);
+
+                updateListViews();
+            }
+        }
+    }
+
+    @FXML
+    public void rightListClicked(MouseEvent mouseEvent) {
+        if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+            if (!rightListView.getSelectionModel().isEmpty()) {
+                Task selectedItem = rightListView.getSelectionModel().getSelectedItem();
+                String activeProfile = profileLabel.getText();
+                List<Task> profileTasks = profileTasksMap.getOrDefault(activeProfile, new ArrayList<>());
+
+                profileTasks.remove(selectedItem);
+                selectedItem.setTaskCompleted(false);
+                profileTasks.add(selectedItem);
+                profileTasksMap.put(activeProfile, profileTasks);
+
+                updateListViews();
+            }
+        }
     }
 
     private void showAlert() {
