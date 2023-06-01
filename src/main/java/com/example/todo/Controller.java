@@ -24,6 +24,7 @@ public class Controller {
 
     @FXML
     public VBox profileButtonContainer;
+
     @FXML
     protected ListView<Task> leftListView;
 
@@ -55,14 +56,12 @@ public class Controller {
         leftListView.setItems(leftTasks);
         rightListView.setItems(rightTasks);
 
-        // Add default profile
         Button defaultProfileButton = new Button("Default");
         defaultProfileButton.setPrefWidth(Control.USE_PREF_SIZE);
         defaultProfileButton.setMaxWidth(Double.MAX_VALUE);
         defaultProfileButton.setOnMouseClicked(this::profileButtonClicked);
         profileButtonContainer.getChildren().add(defaultProfileButton);
 
-        // Add button
         Image image = new Image("/addicon.png");
         ImageView imageView = new ImageView(image);
         imageView.setFitHeight(30);
@@ -71,7 +70,6 @@ public class Controller {
         addTaskButton.setGraphic(imageView);
         addTaskButton.setStyle("-fx-border-color: transparent; -fx-background-color: transparent;");
 
-        // Delete button
         Image image2 = new Image("/deleteicon.png");
         ImageView imageView2 = new ImageView(image2);
         imageView2.setFitHeight(30);
@@ -85,7 +83,7 @@ public class Controller {
                 profileButton.setOnMouseClicked(this::profileButtonClicked);
             }
         });
-        // Update left tasks listview
+
         leftListView.setCellFactory(param -> new ListCell<>() {
             @Override
             protected void updateItem(Task item, boolean empty) {
@@ -105,7 +103,7 @@ public class Controller {
                 }
             }
         });
-        // Update right tasks listview
+
         rightListView.setCellFactory(param -> new ListCell<>() {
             @Override
             protected void updateItem(Task item, boolean empty) {
@@ -113,10 +111,14 @@ public class Controller {
 
                 if (empty) {
                     setText(null);
+                    setStyle(null);
+                    setBackground(null);
                     setGraphic(null);
                 } else {
                     if (item.isTaskCompleted()) {
                         setText(item.getText());
+                        int priority = item.getPriority();
+                        setBackground(new Background(new BackgroundFill(getPriorityColor(priority), null, null)));
                         ImageView checkmark = new ImageView(Objects.requireNonNull(getClass().getResource("/checkmark.png")).toExternalForm());
                         checkmark.setFitHeight(16);
                         checkmark.setFitWidth(14);
@@ -135,30 +137,10 @@ public class Controller {
         String profileName = profileButton.getText();
         this.profileName = profileName;
         profileLabel.setText(profileName);
-        updateListViewByProfile(profileName);
+        updateListViews();
         System.out.println("Profile: " + profileName);
     }
 
-
-    // TODO refactor this method to use boolean instead of 2 lists
-    private void updateListViewByProfile(String profileName) {
-
-        List<Task> tasks = profileTasksMap.getOrDefault(profileName, new ArrayList<>());
-
-        leftListView.getItems().clear();
-        rightListView.getItems().clear();
-
-        for (Task task : tasks) {
-            if (!task.isTaskCompleted())
-                leftListView.getItems().add(task);
-            rightListView.getItems().add(task);
-        }
-
-        Comparator<Task> priorityComparator = Comparator.comparing(Task::getPriority);
-        leftTasks.sort(priorityComparator);
-        rightTasks.sort(priorityComparator);
-
-    }
 
     @FXML
     private void updateListViews() {
@@ -174,7 +156,8 @@ public class Controller {
                 for (Task task : tasks) {
                     if (!task.isTaskCompleted()) {
                         leftTasks.add(task);
-                    } else {
+                    }
+                    if (task.isTaskCompleted()) {
                         rightTasks.add(task);
                     }
                 }
@@ -186,7 +169,6 @@ public class Controller {
         rightTasks.sort(priorityComparator.reversed());
     }
 
-
     @FXML
     protected void leftListClicked(MouseEvent mouseEvent) {
 
@@ -194,13 +176,12 @@ public class Controller {
             if (!leftListView.getSelectionModel().isEmpty()) {
                 Task selectedItem = leftListView.getSelectionModel().getSelectedItem();
                 String activeProfile = profileLabel.getText();
-
                 List<Task> profileTasks = profileTasksMap.getOrDefault(activeProfile, new ArrayList<>());
+
                 profileTasks.remove(selectedItem);
                 selectedItem.setTaskCompleted(true);
                 profileTasks.add(selectedItem);
                 profileTasksMap.put(activeProfile, profileTasks);
-
 
                 updateListViews();
             }
@@ -213,21 +194,17 @@ public class Controller {
             if (!rightListView.getSelectionModel().isEmpty()) {
                 Task selectedItem = rightListView.getSelectionModel().getSelectedItem();
                 String activeProfile = profileLabel.getText();
-                rightTasks.remove(selectedItem);
-
                 List<Task> profileTasks = profileTasksMap.getOrDefault(activeProfile, new ArrayList<>());
+
                 profileTasks.remove(selectedItem);
                 selectedItem.setTaskCompleted(false);
                 profileTasks.add(selectedItem);
                 profileTasksMap.put(activeProfile, profileTasks);
 
-                rightListView.getSelectionModel().clearSelection();
-
                 updateListViews();
             }
         }
     }
-
 
     @FXML
     private void addNewTask() {
@@ -292,19 +269,15 @@ public class Controller {
     }
 
     private int getPriority(String priority) {
-        if (priority.equals("High")) {
-            return 3;
-        } else if (priority.equals("Medium")) {
-            return 2;
-        } else if (priority.equals("Low")) {
-            return 1;
-        } else {
-            return 0;
-        }
+        return switch (priority) {
+            case "High" -> 3;
+            case "Medium" -> 2;
+            case "Low" -> 1;
+            default -> 0;
+        };
     }
 
 
-    // TODO edit this method to use the righttasks and lefttasks lists
     public void editTodoItems(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.SECONDARY) {
             Task selectedItem = leftListView.getSelectionModel().getSelectedItem();
@@ -314,10 +287,9 @@ public class Controller {
                 MenuItem editMenuItem = new MenuItem("Edit");
                 editMenuItem.setOnAction(event -> {
                     String currentText = selectedItem.getText();
-                    String currentPriority = getPriorityFromText(currentText);
-                    String currentTextFormatted = currentText.replace(" (" + currentPriority + ")", "");
+                    int currentPriority = selectedItem.getPriority();
 
-                    TextInputDialog editDialog = new TextInputDialog(currentTextFormatted);
+                    TextInputDialog editDialog = new TextInputDialog(currentText);
                     editDialog.setTitle("Edit task");
                     editDialog.setHeaderText(null);
                     editDialog.setContentText("Edit the task:");
@@ -332,11 +304,23 @@ public class Controller {
                     RadioButton lowPriority = new RadioButton("Low");
                     lowPriority.setToggleGroup(priorityGroup);
 
-                    switch (Objects.requireNonNull(currentPriority)) {
-                        case "High" -> highPriority.setSelected(true);
-                        case "Medium" -> mediumPriority.setSelected(true);
-                        case "Low" -> lowPriority.setSelected(true);
+                    switch (currentPriority) {
+                        case 3 -> highPriority.setSelected(true);
+                        case 2 -> mediumPriority.setSelected(true);
+                        case 1 -> lowPriority.setSelected(true);
                     }
+
+                    priorityGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+                        boolean isInputEmpty = editDialog.getEditor().getText().isEmpty();
+                        boolean isPrioritySelected = newValue != null;
+                        editDialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(isInputEmpty || !isPrioritySelected);
+                    });
+
+                    editDialog.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+                        boolean isInputEmpty = editDialog.getEditor().getText().isEmpty();
+                        boolean isPrioritySelected = priorityGroup.getSelectedToggle() != null;
+                        editDialog.getDialogPane().lookupButton(ButtonType.OK).setDisable(isInputEmpty || !isPrioritySelected);
+                    });
 
                     VBox dialogContent = new VBox(10);
                     dialogContent.getChildren().addAll(new Label("Task:"), editDialog.getEditor(),
@@ -345,34 +329,23 @@ public class Controller {
                     editDialog.getDialogPane().setContent(dialogContent);
 
                     Optional<String> editResult = editDialog.showAndWait();
-                    if (editResult.isPresent()) {
-                        String newText = editResult.get();
-                        String newPriority = ((RadioButton) priorityGroup.getSelectedToggle()).getText();
+                    editResult.ifPresent(newText -> {
+                        RadioButton selectedPriority = (RadioButton) priorityGroup.getSelectedToggle();
+                        if (selectedPriority != null) {
+                            String newPriority = selectedPriority.getText();
+                            int newPriorityValue = getPriority(newPriority);
 
-                        //String updatedTask = newText + " (" + newPriority + ")";
-
-                        selectedItem.setText(newText);
-                        selectedItem.setPriority(getPriority(newPriority));
-                        // todo need refresh here?
-                        leftListView.refresh();
-
-                    }
-
+                            selectedItem.setText(newText);
+                            selectedItem.setPriority(newPriorityValue);
+                            leftListView.refresh();
+                        }
+                    });
                 });
 
-                MenuItem deleteMenuItem = new MenuItem("Delete");
-                deleteMenuItem.setOnAction(event -> {
-                    // Handle the delete action here
-                    System.out.println("Delete option selected for item: " + selectedItem.getText());
-                    leftListView.getItems().remove(selectedItem);
-                });
-
-
-                contextMenu.getItems().addAll(editMenuItem, deleteMenuItem);
-                leftListView.setContextMenu(contextMenu);
+                contextMenu.getItems().add(editMenuItem);
+                contextMenu.show(leftListView, mouseEvent.getScreenX(), mouseEvent.getScreenY());
             }
         }
-
     }
 
     public void editCompletedItems(MouseEvent mouseEvent) {
@@ -443,8 +416,6 @@ public class Controller {
             profileButtonContainer.getChildren().add(newProfileButton);
             profileTasksMap.put(profileName, new ArrayList<>());
         });
-
-
     }
 
     private void showAlert() {
@@ -462,7 +433,6 @@ public class Controller {
         return toggleGroup.getSelectedToggle() != null;
     }
 
-
     private Color getPriorityColor(int priority) {
         return switch (priority) {
             case 3 -> Color.web("#fa7575");
@@ -473,22 +443,10 @@ public class Controller {
     }
 
 
-    // TODO old method, remove
-    private String getPriorityFromText(String text) {
-        String[] parts = text.split("\\(");
-        if (parts.length > 1) {
-            String priorityPart = parts[1].trim();
-            return priorityPart.substring(0, priorityPart.length() - 1);
-        }
-        return null;
-    }
-
 }
 
-// TODO fick löst lite med default bugg - nu behöver jag ta bort från completed och adda bara från completedtasklist
-// TODO ----  verkar som den lägger till från ngt annat är dom två listornrna (maps) jag gjort .
-
-// TODO 15: Make Task stay on rightListView (completed) when swapping back and forth between profiles.
+// TOdo update delete method in complete list
+// todo update delete all method in complete list
 // TODO 16: Add a way to edit a profile button name.
 // TODO 17: Add logic to delete a profile button with all it's contents. (Maybe a confirmation dialog)
 // TODO 19: Make the listviews responsive to window size changes.
