@@ -1,5 +1,7 @@
 package com.example.todo;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -13,6 +15,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Window;
 
+
 import java.util.*;
 
 
@@ -25,6 +28,9 @@ public class Controller {
     protected ListView<Task> leftListView;
 
     @FXML
+    Label profileLabel;
+
+    @FXML
     protected ListView<Task> rightListView;
 
     @FXML
@@ -33,11 +39,21 @@ public class Controller {
     @FXML
     protected Button clearCompletedButton;
 
-    private String profileName = "Default";
-    private final Map<String, List<Task>> profileTasksMap = new HashMap<>();
+    private String profileName;
+    private Map<String, List<Task>> profileTasksMap;
+
+    ObservableList<Task> leftTasks = FXCollections.observableArrayList();
+    ObservableList<Task> rightTasks = FXCollections.observableArrayList();
 
     @FXML
     private void initialize() {
+        profileName = "Default";
+        profileTasksMap = new HashMap<>();
+
+        profileLabel.setText(profileName);
+
+        leftListView.setItems(leftTasks);
+        rightListView.setItems(rightTasks);
 
         // Add default profile
         Button defaultProfileButton = new Button("Default");
@@ -45,7 +61,6 @@ public class Controller {
         defaultProfileButton.setMaxWidth(Double.MAX_VALUE);
         defaultProfileButton.setOnMouseClicked(this::profileButtonClicked);
         profileButtonContainer.getChildren().add(defaultProfileButton);
-
 
         // Add button
         Image image = new Image("/addicon.png");
@@ -70,9 +85,8 @@ public class Controller {
                 profileButton.setOnMouseClicked(this::profileButtonClicked);
             }
         });
-
-        // Update active tasks listview
-        leftListView.setCellFactory(param -> new ListCell<Task>() {
+        // Update left tasks listview
+        leftListView.setCellFactory(param -> new ListCell<>() {
             @Override
             protected void updateItem(Task item, boolean empty) {
                 super.updateItem(item, empty);
@@ -82,17 +96,17 @@ public class Controller {
                     setStyle(null);
                     setBackground(null);
                 } else {
-                    setText(item.getText());
-                    setGraphic(null);
-                    String priority = item.getPriority();
-                    assert priority != null;
-                    setBackground(new Background(new BackgroundFill(getPriorityColor(priority), null, null)));
+                    if (!item.isTaskCompleted()) {
+                        setText(item.getText());
+                        setGraphic(null);
+                        int priority = item.getPriority();
+                        setBackground(new Background(new BackgroundFill(getPriorityColor(priority), null, null)));
+                    }
                 }
             }
         });
-
-        // Update completed tasks listview
-        rightListView.setCellFactory(param -> new ListCell<Task>() {
+        // Update right tasks listview
+        rightListView.setCellFactory(param -> new ListCell<>() {
             @Override
             protected void updateItem(Task item, boolean empty) {
                 super.updateItem(item, empty);
@@ -101,11 +115,13 @@ public class Controller {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    setText(item.getText());
-                    ImageView checkmark = new ImageView(Objects.requireNonNull(getClass().getResource("/checkmark.png")).toExternalForm());
-                    checkmark.setFitHeight(16);
-                    checkmark.setFitWidth(14);
-                    setGraphic(checkmark);
+                    if (item.isTaskCompleted()) {
+                        setText(item.getText());
+                        ImageView checkmark = new ImageView(Objects.requireNonNull(getClass().getResource("/checkmark.png")).toExternalForm());
+                        checkmark.setFitHeight(16);
+                        checkmark.setFitWidth(14);
+                        setGraphic(checkmark);
+                    }
                 }
             }
         });
@@ -115,24 +131,17 @@ public class Controller {
     @FXML
     private void profileButtonClicked(MouseEvent mouseEvent) {
         Button profileButton = (Button) mouseEvent.getSource();
-        if (profileButton.getText().equals("Default")) {
-            profileName = "Default";
-            updateListViewByProfile("Default");
-            return;
-        }
 
         String profileName = profileButton.getText();
-        System.out.println("Profile " + profileName + " clicked");
         this.profileName = profileName;
+        profileLabel.setText(profileName);
         updateListViewByProfile(profileName);
+        System.out.println("Profile: " + profileName);
     }
 
+
+    // TODO refactor this method to use boolean instead of 2 lists
     private void updateListViewByProfile(String profileName) {
-        if (profileName.equals("Default")) {
-            List<Task> tasks = profileTasksMap.getOrDefault("Default", new ArrayList<>());
-            leftListView.getItems().setAll(tasks);
-            return;
-        }
 
         List<Task> tasks = profileTasksMap.getOrDefault(profileName, new ArrayList<>());
 
@@ -140,46 +149,85 @@ public class Controller {
         rightListView.getItems().clear();
 
         for (Task task : tasks) {
-            leftListView.getItems().add(task);
+            if (!task.isTaskCompleted())
+                leftListView.getItems().add(task);
+            rightListView.getItems().add(task);
         }
 
+        Comparator<Task> priorityComparator = Comparator.comparing(Task::getPriority);
+        leftTasks.sort(priorityComparator);
+        rightTasks.sort(priorityComparator);
 
     }
 
     @FXML
+    private void updateListViews() {
+        System.out.println("Updating list views");
+        leftTasks.clear();
+        rightTasks.clear();
+
+        for (Map.Entry<String, List<Task>> entry : profileTasksMap.entrySet()) {
+            String key = entry.getKey();
+            List<Task> tasks = entry.getValue();
+
+            if (key.equals(profileName)) {
+                for (Task task : tasks) {
+                    if (!task.isTaskCompleted()) {
+                        leftTasks.add(task);
+                    } else {
+                        rightTasks.add(task);
+                    }
+                }
+            }
+        }
+
+        Comparator<Task> priorityComparator = Comparator.comparing(Task::getPriority);
+        leftTasks.sort(priorityComparator.reversed());
+        rightTasks.sort(priorityComparator.reversed());
+    }
+
+
+    @FXML
     protected void leftListClicked(MouseEvent mouseEvent) {
+
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
             if (!leftListView.getSelectionModel().isEmpty()) {
                 Task selectedItem = leftListView.getSelectionModel().getSelectedItem();
-                if (selectedItem != null) {
-                    rightListView.getItems().add(selectedItem);
-                    leftListView.getItems().remove(selectedItem);
-                    leftListView.getSelectionModel().clearSelection();
-                }
-            } else {
-                leftListView.getSelectionModel().clearSelection();
+                String activeProfile = profileLabel.getText();
+
+                List<Task> profileTasks = profileTasksMap.getOrDefault(activeProfile, new ArrayList<>());
+                profileTasks.remove(selectedItem);
+                selectedItem.setTaskCompleted(true);
+                profileTasks.add(selectedItem);
+                profileTasksMap.put(activeProfile, profileTasks);
+
+
+                updateListViews();
             }
         }
     }
 
+    @FXML
     public void rightListClicked(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.PRIMARY) {
             if (!rightListView.getSelectionModel().isEmpty()) {
                 Task selectedItem = rightListView.getSelectionModel().getSelectedItem();
-                if (selectedItem != null) {
-                    rightListView.getItems().remove(selectedItem);
-                    leftListView.getItems().add(selectedItem);
-                    rightListView.getSelectionModel().clearSelection();
+                String activeProfile = profileLabel.getText();
+                rightTasks.remove(selectedItem);
 
+                List<Task> profileTasks = profileTasksMap.getOrDefault(activeProfile, new ArrayList<>());
+                profileTasks.remove(selectedItem);
+                selectedItem.setTaskCompleted(false);
+                profileTasks.add(selectedItem);
+                profileTasksMap.put(activeProfile, profileTasks);
 
-                    leftListView.refresh();
-
-                }
-            } else {
                 rightListView.getSelectionModel().clearSelection();
+
+                updateListViews();
             }
         }
     }
+
 
     @FXML
     private void addNewTask() {
@@ -226,30 +274,37 @@ public class Controller {
                 String profileName = this.profileName;
 
                 String priority = ((RadioButton) priorityGroup.getSelectedToggle()).getText();
+
+                int priorityValue = getPriority(priority);
                 Color priorityColor = Task.getPriorityColor();
 
-                Task newTask = new Task();
-                newTask.setPriority(priority);
-                newTask.setText(resultTask);
-                leftListView.getItems().add(newTask);
-
                 List<Task> profileTasks = profileTasksMap.getOrDefault(profileName, new ArrayList<>());
-                profileTasks.add(new Task(resultTask, priority, priorityColor));
+                profileTasks.add(new Task(resultTask, priorityValue, priorityColor, false));
+                System.out.println("PROFILE LABEL: " + profileLabel.getText().toLowerCase());
                 profileTasksMap.put(profileName, profileTasks);
 
-                leftListView.getItems().sort((o1, o2) -> {
-                    Task task1 = profileTasksMap.getOrDefault
-                            (profileName, new ArrayList<>()).get(leftListView.getItems().indexOf(o1));
-                    Task task2 = profileTasksMap.getOrDefault
-                            (profileName, new ArrayList<>()).get(leftListView.getItems().indexOf(o2));
-                    return comparePriority(task1.getPriority(), task2.getPriority());
-                });
+                updateListViews();
+
             } else {
                 showAlert();
             }
         });
     }
 
+    private int getPriority(String priority) {
+        if (priority.equals("High")) {
+            return 3;
+        } else if (priority.equals("Medium")) {
+            return 2;
+        } else if (priority.equals("Low")) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+
+    // TODO edit this method to use the righttasks and lefttasks lists
     public void editTodoItems(MouseEvent mouseEvent) {
         if (mouseEvent.getButton() == MouseButton.SECONDARY) {
             Task selectedItem = leftListView.getSelectionModel().getSelectedItem();
@@ -293,9 +348,12 @@ public class Controller {
                     if (editResult.isPresent()) {
                         String newText = editResult.get();
                         String newPriority = ((RadioButton) priorityGroup.getSelectedToggle()).getText();
-                        String updatedTask = newText + " (" + newPriority + ")";
-                        selectedItem.setText(updatedTask);
-                        selectedItem.setPriority(newPriority);
+
+                        //String updatedTask = newText + " (" + newPriority + ")";
+
+                        selectedItem.setText(newText);
+                        selectedItem.setPriority(getPriority(newPriority));
+                        // todo need refresh here?
                         leftListView.refresh();
 
                     }
@@ -333,6 +391,7 @@ public class Controller {
                 deleteMenuItem.setOnAction(event -> {
                     // Handle the delete action here
                     System.out.println("Delete option selected for item: " + selectedItem.getText());
+
                     rightListView.getItems().remove(selectedItem);
                 });
 
@@ -343,32 +402,6 @@ public class Controller {
         }
     }
 
-    private int comparePriority(String priority1, String priority2) {
-        List<String> priorityOrder = Arrays.asList(priority1, priority2, "Low");
-        priorityOrder.sort((p1, p2) -> {
-            if (p1.equals(p2)) {
-                return 0;
-            } else if (p1.equals("High")) {
-                return -1;
-            } else if (p1.equals("Medium")) {
-                if (p2 == null || p2.equals("High")) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            } else if (p1.equals("Low")) {
-                if (p2 == null || p2.equals("High") || p2.equals("Medium")) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            } else {
-                return 0;
-            }
-        });
-
-        return priorityOrder.indexOf(priority1) - priorityOrder.indexOf(priority2);
-    }
 
     public void clearCompleted() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -384,7 +417,7 @@ public class Controller {
         }
     }
 
-    public void createNewProfile() {
+    public void addNewProfile() {
         TextInputDialog newProfileDialog = new TextInputDialog();
         newProfileDialog.setTitle("Add Profile");
         newProfileDialog.setHeaderText(null);
@@ -429,20 +462,18 @@ public class Controller {
         return toggleGroup.getSelectedToggle() != null;
     }
 
-    //todo maybe only use Task method?
-    private Color getPriorityColor(String priority) {
-        if (priority == null) {
-            return Color.TRANSPARENT;
-        }
+
+    private Color getPriorityColor(int priority) {
         return switch (priority) {
-            case "High" -> Color.web("#fa7575");
-            case "Medium" -> Color.web("#fae875");
-            case "Low" -> Color.web("#96fa75");
+            case 3 -> Color.web("#fa7575");
+            case 2 -> Color.web("#fae875");
+            case 1 -> Color.web("#96fa75");
             default -> Color.TRANSPARENT;
         };
     }
 
 
+    // TODO old method, remove
     private String getPriorityFromText(String text) {
         String[] parts = text.split("\\(");
         if (parts.length > 1) {
@@ -454,10 +485,12 @@ public class Controller {
 
 }
 
-// TODO 2: Make Task stay on rightListView (completed) when swapping back and forth between profiles.
-// TODO 3: Add a way to edit a profile button name.
-// TODO 4: Add logic to delete a profile button with all it's contents. (Maybe a confirmation dialog)
-// TODO 5: Update the TODO label to match profile name when swapping profiles.
-// TODO 6: Make the listviews responsive to window size changes.
-// TODO 7: Add a way to make the user to resize the listviews.
-// TODO 8: Maybe add number of todo's on the right side of the profile buttons.
+// TODO fick löst lite med default bugg - nu behöver jag ta bort från completed och adda bara från completedtasklist
+// TODO ----  verkar som den lägger till från ngt annat är dom två listornrna (maps) jag gjort .
+
+// TODO 15: Make Task stay on rightListView (completed) when swapping back and forth between profiles.
+// TODO 16: Add a way to edit a profile button name.
+// TODO 17: Add logic to delete a profile button with all it's contents. (Maybe a confirmation dialog)
+// TODO 19: Make the listviews responsive to window size changes.
+// TODO 20: Add a way to make the user to resize the listviews.
+// TODO 21: Maybe add number of todo's on the right side of the profile buttons.

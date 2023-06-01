@@ -18,7 +18,7 @@
     </rowConstraints>
     <ListView fx:id="rightListView" blendMode="DARKEN" onMouseClicked="#rightListClicked" onMousePressed="#editCompletedItems" prefHeight="326.0" prefWidth="244.0" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.rowSpan="2" />
     <ListView fx:id="leftListView" blendMode="DARKEN" onMouseClicked="#leftListClicked" onMousePressed="#editTodoItems" prefHeight="326.0" prefWidth="243.0" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.rowSpan="2" />
-    <Label text="TODO" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+    <Label fx:id="profileLabel" text="TODO" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
         <font>
           <Font name="System Bold" size="12.0" />
         </font>
@@ -56,7 +56,7 @@
 
 
 
-    <Button mnemonicParsing="false" onMousePressed="#createNewProfile" prefHeight="25.0" prefWidth="133.0" text="Add profile..">
+    <Button mnemonicParsing="false" onMousePressed="#addNewProfile" prefHeight="25.0" prefWidth="133.0" text="Add profile..">
       <font>
          <Font name="Calibri Light" size="12.0" />
       </font>
