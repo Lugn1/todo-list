@@ -436,35 +436,50 @@ public class Controller {
         Optional<String> result = newProfileDialog.showAndWait();
 
         result.ifPresent(profileName -> {
-            Button newProfileButton = new Button(profileName);
-            newProfileButton.setPrefWidth(Control.USE_PREF_SIZE);
-            newProfileButton.setMaxWidth(Double.MAX_VALUE);
-            newProfileButton.setOnMouseClicked(this::profileButtonClicked);
-            profileButtonContainer.getChildren().add(newProfileButton);
-            profileTasksMap.put(profileName, new ArrayList<>());
+            if (profileTasksMap.containsKey(profileName)) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText(null);
+                alert.setContentText("Profile already exists! Please choose a different name.");
+                alert.showAndWait();
+            } else {
+                Button newProfileButton = new Button(profileName);
+                newProfileButton.setPrefWidth(Control.USE_PREF_SIZE);
+                newProfileButton.setMaxWidth(Double.MAX_VALUE);
+                newProfileButton.setOnMouseClicked(this::profileButtonClicked);
+                profileButtonContainer.getChildren().add(newProfileButton);
+                profileTasksMap.put(profileName, new ArrayList<>());
 
 
+            }
         });
     }
 
     private void renameProfile(String oldProfileName, String newProfileName) {
-        List<Task> tasks = profileTasksMap.remove(oldProfileName);
-        profileTasksMap.put(newProfileName, tasks);
+        if (profileTasksMap.containsKey(newProfileName)) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Profile already exists! Please choose a different name.");
+            alert.showAndWait();
+        } else {
+            List<Task> tasks = profileTasksMap.remove(oldProfileName);
+            profileTasksMap.put(newProfileName, tasks);
 
-        profileButtonContainer.getChildren().forEach(node -> {
-            if (node instanceof Button profileButton) {
-                if (profileButton.getText().equals(oldProfileName)) {
-                    profileButton.setText(newProfileName);
+            profileButtonContainer.getChildren().forEach(node -> {
+                if (node instanceof Button profileButton) {
+                    if (profileButton.getText().equals(oldProfileName)) {
+                        profileButton.setText(newProfileName);
+                    }
                 }
+            });
+            if (profileName.equals(oldProfileName)) {
+                profileName = newProfileName;
+                profileLabel.setText(newProfileName);
             }
-        });
 
-        if (profileName.equals(oldProfileName)) {
-            profileName = newProfileName;
-            profileLabel.setText(newProfileName);
+            updateListViews();
         }
-
-        updateListViews();
     }
 
 
@@ -534,7 +549,6 @@ public class Controller {
 
 
 // Backend
-// TODO Do not allow user to create a new profile with the same name as an existing one.
 // TODO Add a FileWriter class.
 // TODO Add methods to the FileWriter class to handle data.
 // TODO Update Archive(?) method in rightListView.
